@@ -277,26 +277,36 @@ html, body {
 
 /* 敵は左に、左端から歩いてくる */
 .enemy-side {
-  flex: 1; display: flex; align-items: flex-end;
+  flex: 1; min-width: 0; display: flex; align-items: flex-end;
   justify-content: flex-start;
   overflow: visible;
 }
 /* 味方は右に、中央寄り */
 .ally-side {
-  flex: 1; display: flex; align-items: flex-end; gap: 6px;
-  justify-content: flex-start; overflow: hidden;
+  flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 4px;
+  justify-content: center; overflow: hidden;
 }
 .field-divider { width: 2px; background: rgba(255,255,255,0.3); align-self: stretch; margin: 12px 8px; }
 
 .ally-container, .enemy-container {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
+/* 味方は人数で味方エリアを等分し、各スプライトはコンテナ幅にフィットさせる
+   （固定pxだと狭い画面や複数体で画面外に見切れるのを防ぐ） */
+.ally-container {
+  flex: 1 1 0; min-width: 0; max-width: 140px;
+}
 .char-sprite {
   width: 216px; height: 216px; object-fit: contain;
   image-rendering: pixelated;
   filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.45));
 }
-.enemy-sprite { width: 264px; height: 264px; }
+/* 味方スプライト: コンテナ幅に追従（上限は元の216px） */
+.ally-sprite.char-sprite {
+  width: 100%; max-width: 216px; height: auto; aspect-ratio: 1 / 1;
+}
+/* 敵スプライト: 画面幅を超えないよう可変上限 */
+.enemy-sprite { width: min(264px, 46vw); height: auto; aspect-ratio: 1 / 1; }
 
 /* 味方スプライトは左向き（敵のいる方向へ） */
 .ally-sprite { transform: scaleX(-1); }
@@ -313,7 +323,8 @@ html, body {
 .char-name {
   font-size: 0.65rem; color: #FFF; font-weight: 700;
   text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  white-space: nowrap;
+  white-space: nowrap; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis;
 }
 
 /* アニメーション */
@@ -697,7 +708,9 @@ html, body {
 
   .battle-field { padding: 0 20px 16px; }
   .char-sprite  { width: 288px; height: 288px; }
-  .enemy-sprite { width: 360px; height: 360px; }
+  .ally-container { max-width: 220px; }
+  .ally-sprite.char-sprite { max-width: 288px; }
+  .enemy-sprite { width: min(360px, 42vw); height: auto; aspect-ratio: 1 / 1; }
 
   .quiz-area { border-radius: 24px 24px 0 0; padding: 18px 24px 22px; }
   .quiz-question { font-size: 1.2rem; }
