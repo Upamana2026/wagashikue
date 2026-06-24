@@ -101,6 +101,8 @@
 
       <!-- キャラクターエリア（横スクロール風） -->
       <div class="battle-field">
+        <!-- ゲーム内メッセージ（体力バーの下＝フィールド上部に表示） -->
+        <div id="message-popup" class="message-popup hidden"></div>
         <div class="enemy-side" id="enemy-side"></div>
         <div class="field-divider"></div>
         <div class="ally-side" id="ally-side"></div>
@@ -229,7 +231,6 @@
 
   <!-- ========== グローバルポップアップ ========== -->
   <div id="damage-popup" class="damage-popup hidden">0</div>
-  <div id="message-popup" class="message-popup hidden"></div>
 
   <!-- ========== スクリプト ========== -->
   <script src="js/imageproc.js"></script>
