@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <title>ワガシクエ！</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#F4A7B9">
+  <meta name="description" content="クイズに正解してノミモノたちと敵を倒す、横スクロール型クイズバトルゲーム。">
+  <!-- iOS（ホーム画面追加でフルスクリーン化） -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ワガシクエ">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+
+  <link rel="stylesheet" href="style.css">
+  <!-- SheetJS: Excelファイル読み込み用 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- ========== メインメニュー ========== -->
+  <div id="screen-menu" class="screen active">
+    <div class="menu-bg">
+      <div class="menu-cloud cloud1"></div>
+      <div class="menu-cloud cloud2"></div>
+      <div class="menu-cloud cloud3"></div>
+    </div>
+    <div class="menu-content">
+      <h1 class="game-title">
+        <img src="中アイコン.png" alt="ワガシクエ！" class="game-title-img">
+      </h1>
+      <div class="user-info-bar">
+        <span id="menu-level" class="info-badge">Lv.1</span>
+        <span id="menu-exp" class="info-badge exp-badge">EXP 0/102</span>
+        <span id="menu-sugar" class="info-badge sugar-badge">🍬 0</span>
+      </div>
+      <nav class="menu-nav">
+        <button class="btn-menu" onclick="App.goTo('subject-select')">
+          <span class="btn-icon">⚔️</span>バトル開始
+        </button>
+        <button class="btn-menu" onclick="App.goTo('stock')">
+          <span class="btn-icon">📦</span>ストック管理
+        </button>
+        <button class="btn-menu" onclick="App.goTo('gacha')">
+          <span class="btn-icon">🎲</span>ガチャ
+        </button>
+        <button class="btn-menu" onclick="App.goTo('encyclopedia')">
+          <span class="btn-icon">📖</span>図鑑
+        </button>
+        <button class="btn-menu" onclick="App.goTo('quiz-manage')">
+          <span class="btn-icon">📝</span>クイズ管理
+        </button>
+      </nav>
+      <p class="menu-footer">データはこの端末のみに保存されます</p>
+    </div>
+  </div>
+
+  <!-- ========== 科目選択 ========== -->
+  <div id="screen-subject-select" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goTo('menu')">← 戻る</button>
+      <h2>科目を選んでバトル！</h2>
+    </div>
+    <div id="subject-list" class="subject-list"></div>
+    <p class="hint-text">科目は「クイズ管理」からCSVで追加できます</p>
+  </div>
+
+  <!-- ========== バトル画面 ========== -->
+  <div id="screen-battle" class="screen">
+    <!-- 横スクロール背景 -->
+    <div class="battle-bg">
+      <div class="scroll-layer sky"></div>
+      <div class="scroll-layer far-bg"></div>
+      <div class="scroll-layer near-bg"></div>
+      <div class="ground-strip"></div>
+    </div>
+
+    <!-- バトルUI -->
+    <div class="battle-ui">
+
+      <!-- Wave表示 -->
+      <div class="battle-top-bar">
+        <span id="wave-text" class="wave-badge">Wave 1/3</span>
+      </div>
+
+      <!-- HPバーエリア -->
+      <div class="hp-bars-area">
+        <div class="ally-hp-section" id="ally-hp-bars"></div>
+        <div class="enemy-hp-section">
+          <span class="hp-label" id="enemy-name-label">敵</span>
+          <div class="hp-bar-container">
+            <div class="hp-bar enemy-bar" id="enemy-hp-bar" style="width:100%"></div>
+          </div>
+          <span class="hp-num" id="enemy-hp-text">50/50</span>
+        </div>
+      </div>
+
+      <!-- キャラクターエリア（横スクロール風） -->
+      <div class="battle-field">
+        <div class="enemy-side" id="enemy-side"></div>
+        <div class="field-divider"></div>
+        <div class="ally-side" id="ally-side"></div>
+      </div>
+
+      <!-- クイズエリア -->
+      <div class="quiz-area">
+        <div class="quiz-question" id="quiz-question">読み込み中...</div>
+        <div class="quiz-choices" id="quiz-choices"></div>
+      </div>
+
+    </div>
+
+    <!-- Wave遷移表示 -->
+    <div id="wave-transition" class="wave-transition hidden"></div>
+
+    <!-- 勝敗オーバーレイ -->
+    <div id="battle-overlay" class="battle-overlay hidden">
+      <div class="battle-result-box">
+        <h2 id="battle-result-title">勝利！</h2>
+        <div id="battle-result-msg"></div>
+        <button class="btn-primary" onclick="Battle.endBattle()">メニューへ戻る</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ストック管理 ========== -->
+  <div id="screen-stock" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goTo('menu')">← 戻る</button>
+      <h2>ストック管理</h2>
+    </div>
+    <div class="stock-info-bar">
+      <span>上限: <strong id="stock-limit-text">2体</strong></span>
+      <span>現在: <strong id="stock-count-text">0体</strong></span>
+      <span class="hint-text">先頭から最大5体がバトルに出ます</span>
+    </div>
+    <div id="stock-list" class="stock-list"></div>
+  </div>
+
+  <!-- ========== ガチャ ========== -->
+  <div id="screen-gacha" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goTo('menu')">← 戻る</button>
+      <h2>🎲 ガチャ</h2>
+    </div>
+    <div class="gacha-area">
+      <div class="gacha-sugar-display">
+        所持角砂糖: <strong id="gacha-sugar">0</strong> 個
+      </div>
+      <p class="gacha-cost">1回 200角砂糖</p>
+      <button class="btn-gacha" onclick="Gacha.roll()">ガチャを回す！</button>
+      <div id="gacha-result" class="gacha-result hidden"></div>
+      <div class="gacha-rate-note">
+        <h3>排出率一覧</h3>
+        <div id="gacha-rate-list">
+          <!-- JS で描画 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 図鑑 ========== -->
+  <div id="screen-encyclopedia" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goTo('menu')">← 戻る</button>
+      <h2>📖 図鑑</h2>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="Encyclopedia.showTab('ally', this)">味方</button>
+      <button class="tab-btn" onclick="Encyclopedia.showTab('enemy', this)">敵</button>
+    </div>
+    <div id="encyclopedia-content" class="encyclopedia-grid"></div>
+  </div>
+
+  <!-- ========== クイズ管理 ========== -->
+  <div id="screen-quiz-manage" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goTo('menu')">← 戻る</button>
+      <h2>📝 クイズ管理</h2>
+    </div>
+    <div class="quiz-manage-layout">
+
+      <!-- 科目管理パネル -->
+      <section class="manage-panel">
+        <h3>科目一覧</h3>
+        <div id="subject-manage-list"></div>
+        <div class="add-subject-row">
+          <input type="text" id="new-subject-name" placeholder="新しい科目名" class="text-input">
+          <button class="btn-secondary" onclick="QuizManager.addSubject()">追加</button>
+        </div>
+      </section>
+
+      <!-- CSVインポートパネル -->
+      <section class="manage-panel">
+        <h3>CSVインポート</h3>
+        <label class="select-label">インポート先</label>
+        <select id="import-target-subject" class="select-input"></select>
+        <label class="file-label">
+          <input type="file" id="csv-file-input" accept=".csv,.xlsx,.xls"
+            onchange="QuizManager.importFile(event)" class="file-input-hidden">
+          <span class="file-btn">📂 ファイルを選択</span>
+        </label>
+        <div class="csv-format-box">
+          <strong>CSVフォーマット（1行目は見出し）</strong>
+          <table class="format-table">
+            <tr><th>1列目</th><td>問題文</td></tr>
+            <tr><th>2列目</th><td>正解</td></tr>
+            <tr><th>3〜5列目</th><td>誤答（空欄可）</td></tr>
+          </table>
+          <small>誤答が空の場合は同科目の他の正解から自動補完します</small>
+        </div>
+      </section>
+
+      <!-- 問題リストパネル -->
+      <section class="manage-panel wide-panel">
+        <h3>問題リスト
+          <select id="view-subject-select" class="select-input inline"
+            onchange="QuizManager.viewSubject()"></select>
+        </h3>
+        <div id="question-list" class="question-list"></div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ========== グローバルポップアップ ========== -->
+  <div id="damage-popup" class="damage-popup hidden">0</div>
+  <div id="message-popup" class="message-popup hidden"></div>
+
+  <!-- ========== スクリプト ========== -->
+  <script src="js/imageproc.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/battle.js"></script>
+  <script src="js/gacha.js"></script>
+  <script src="js/encyclopedia.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- ガチャ排出率一覧の描画 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.getElementById('gacha-rate-list');
+      if (el) {
+        el.innerHTML = ALLY_DATA.map(a =>
+          `<div class="rate-row"><span>${a.name}</span><span>${a.rarity}%</span></div>`
+        ).join('');
+      }
+    });
+  </script>
+
+  <!-- Service Worker 登録（PWA / オフライン対応） -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // 相対パスで登録 → GitHub Pages のサブディレクトリでも scope が正しく決まる
+        navigator.serviceWorker.register('sw.js').catch((err) => {
+          console.warn('Service Worker の登録に失敗しました:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
