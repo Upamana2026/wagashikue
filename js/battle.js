@@ -371,7 +371,7 @@ const Battle = (() => {
       if (enemy.currentHp <= 0) {
         enemyDefeated();
       } else {
-        setTimeout(nextQuestion, 700);
+        setTimeout(nextQuestion, 150);
       }
     });
   }
@@ -534,14 +534,14 @@ const Battle = (() => {
   function showEnemyDefeatedAnim(name, cb) {
     const el = document.getElementById('enemy-sprite');
     if (el) {
-      el.style.transition = 'opacity 0.5s';
+      el.style.transition = 'opacity 0.25s';
       el.style.opacity = '0';
     }
     showPopup(`${name} を倒した！`);
     setTimeout(() => {
       if (el) { el.style.opacity = '1'; el.style.transition = ''; }
       if (cb) cb();
-    }, 900);
+    }, 350);
   }
 
   function showWaveTransition(waveNum, cb) {
@@ -549,7 +549,7 @@ const Battle = (() => {
     if (el) {
       el.textContent = `Wave ${waveNum}`;
       el.classList.remove('hidden');
-      setTimeout(() => { el.classList.add('hidden'); if (cb) cb(); }, 1200);
+      setTimeout(() => { el.classList.add('hidden'); if (cb) cb(); }, 500);
     } else { if (cb) cb(); }
   }
 
