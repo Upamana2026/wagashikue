@@ -11,6 +11,29 @@ const Battle = (() => {
   // バトル状態
   let state = null;
 
+  // ================================================
+  // 攻撃SE（効果音）
+  // ・味方の攻撃時: CHIPTUNE発射.mp3
+  // ・敵の攻撃時  : enemy_attack.mp3（元ファイル: RPGゲームの攻撃・打撃風SE.mp3）
+  // ・連続攻撃で音が重なっても鳴らせるよう、再生のたびに複製して再生する。
+  // ・音量・ミュートは端末(OS/ブラウザ)設定に従う（volumeは触らない）。
+  // ================================================
+  const ALLY_SE_SRC  = './CHIPTUNE発射.mp3';
+  const ENEMY_SE_SRC = './enemy_attack.mp3';  // 旧: RPGゲームの攻撃・打撃風SE.mp3（中黒「・」がURL/正規化で不一致になり無音化したためASCII名へ）
+  const _allySeBase  = new Audio(ALLY_SE_SRC);
+  const _enemySeBase = new Audio(ENEMY_SE_SRC);
+  _allySeBase.preload  = 'auto';
+  _enemySeBase.preload = 'auto';
+
+  function _playSE(base) {
+    try {
+      const se = base.cloneNode();
+      se.play().catch(() => {});  // 自動再生ブロック時は無視
+    } catch (_) { /* 再生失敗は無視 */ }
+  }
+  function playAllySE()  { _playSE(_allySeBase); }
+  function playEnemySE() { _playSE(_enemySeBase); }
+
   function startBattle(subjectName) {
     const stock = Storage.getStock();
     if (stock.length === 0) {
@@ -284,6 +307,7 @@ const Battle = (() => {
         sprite ? [sprite] : [],
         () => {
           // インパクト：味方を揺らしてダメージ表示
+          playEnemySE();  // 敵の攻撃音
           if (target) {
             target.classList.add('ally-hit');
             setTimeout(() => target && target.classList.remove('ally-hit'), 400);
@@ -501,6 +525,7 @@ const Battle = (() => {
       const target  = document.getElementById('enemy-sprite');
       playSprites(sprites,
         () => {
+          playAllySE();  // 味方の攻撃音
           if (target) { target.classList.add('hit-shake'); setTimeout(() => target.classList.remove('hit-shake'), 400); }
           showDamageNumber(damage, 'enemy');
         },
@@ -511,6 +536,7 @@ const Battle = (() => {
       const target = document.querySelector('.ally-sprite-front') || document.querySelector('.ally-sprite');
       playSprites(sprite ? [sprite] : [],
         () => {
+          playEnemySE();  // 敵の攻撃音
           if (target) {
             target.classList.add('ally-hit');
             setTimeout(() => target.classList.remove('ally-hit'), 400);
