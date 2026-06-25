@@ -100,13 +100,16 @@ const Storage = (() => {
       setUserLevel(1);
       setUserExp(0);
       setUserSugar(0);
+    }
 
-      // デフォルト科目を追加
-      const qs = getQuizSets();
-      if (!qs[DEFAULT_QUIZ_SUBJECT]) {
-        qs[DEFAULT_QUIZ_SUBJECT] = DEFAULT_QUIZ_DATA[DEFAULT_QUIZ_SUBJECT];
-        setQuizSets(qs);
-      }
+    // デフォルト科目(九九)が無ければ補充する。
+    // ※ 九九はUIから削除できない（削除ボタン非表示）ため、消えている場合は
+    //   データ欠落とみなし、初回だけでなく既存セーブに対しても復元する。
+    //   既に九九がある場合は上書きしない（ユーザーの編集を保持）。
+    const qs = getQuizSets();
+    if (!qs[DEFAULT_QUIZ_SUBJECT]) {
+      qs[DEFAULT_QUIZ_SUBJECT] = DEFAULT_QUIZ_DATA[DEFAULT_QUIZ_SUBJECT];
+      setQuizSets(qs);
     }
 
     // 初回 or テスト強制時は、初期味方キャラをストックへ設定

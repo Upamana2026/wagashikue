@@ -24,8 +24,6 @@ const App = (() => {
   }
 
   function onEnterScreen(name) {
-    // 画面に応じたBGMへ切り替え（バトルのみ専用曲、他は共通曲）
-    BGM.playFor(name);
     switch (name) {
       case 'menu':
         updateMenuInfo();
@@ -45,6 +43,13 @@ const App = (() => {
       case 'quiz-manage':
         QuizManager.initQuizManageScreen();
         break;
+    }
+
+    // 画面に応じたBGMへ切り替え（バトルのみ専用曲、他は共通曲）。
+    // ※ 必ず画面描画の「後」に、防御的に呼ぶ。
+    //   BGM未読込やオーディオの不具合があっても画面描画を巻き添えにしないため。
+    if (typeof BGM !== 'undefined') {
+      try { BGM.playFor(name); } catch (e) { console.warn('BGM 再生エラー:', e); }
     }
   }
 
