@@ -19,9 +19,9 @@ const ENEMY_DATA = [
     spawnRate: 0.30,
     isBoss: false,
     images: {
-      normal: '敵キャラ/みたらし団子_5_15_15_20%/normal.png',
-      jump:   '敵キャラ/みたらし団子_5_15_15_20%/jump.png',
-      attack: '敵キャラ/みたらし団子_5_15_15_20%/attack.png',
+      normal: '敵キャラ/みたらし団子_5_15_15_20％/normal.png',
+      jump:   '敵キャラ/みたらし団子_5_15_15_20％/jump.png',
+      attack: '敵キャラ/みたらし団子_5_15_15_20％/attack.png',
     },
     description: '香ばしい醤油だれをまとったみたらし団子。\n素朴ながら、串でちくちく突いてくる。'
   },

@@ -56,7 +56,8 @@ const Storage = (() => {
   function getStockLimit() {
     const lv = getUserLevel();
     if (lv < 10) return 2;
-    return Math.floor(lv / 10) * 2;
+    // Lv10で3体、以降10レベルごとに+1（Lv10→3, Lv20→4, Lv30→5 ...）
+    return Math.floor(lv / 10) + 2;
   }
 
   // 次レベルまでの必要経験値
