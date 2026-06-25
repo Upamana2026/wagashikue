@@ -5,6 +5,8 @@
 // 敵キャラクターデータ
 // フォルダ名形式: キャラクター名_攻撃力_HP_不正解時攻撃力上昇%
 // ※ level と exp はここで個別設定
+// ※ spawnRate: 出現抽選で各敵が選ばれる確率(0〜1)。未設定なら 1(=必ず候補)扱い。
+//    Lv10以下・ボス以外は一律 0.30(30%) に設定。
 const ENEMY_DATA = [
   {
     id: 'mitarashi-dango',
@@ -14,6 +16,7 @@ const ENEMY_DATA = [
     hp: 15,
     exp: 15,
     wrongBoost: 20,
+    spawnRate: 0.30,
     isBoss: false,
     images: {
       normal: '敵キャラ/みたらし団子_5_15_15_20%/normal.png',
@@ -30,6 +33,7 @@ const ENEMY_DATA = [
     hp: 50,
     exp: 50,    // フォルダ名 苺大福_20_50_50_12% の経験値欄に合わせて 5→50 に更新
     wrongBoost: 12,
+    spawnRate: 0.30,
     isBoss: false,
     images: {
       normal: '敵キャラ/苺大福_20_50_50_12％/ノーマル.png',
@@ -46,6 +50,7 @@ const ENEMY_DATA = [
     hp: 65,
     exp: 20,
     wrongBoost: 20,
+    spawnRate: 0.30,
     isBoss: false,
     images: {
       normal: '敵キャラ/水ようかん_30_65_20_20％/nomal.png',

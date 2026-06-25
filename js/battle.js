@@ -123,25 +123,36 @@ const Battle = (() => {
     return { ...arr[Math.floor(Math.random() * arr.length)] };
   }
 
+  // 各敵を自身の spawnRate(出現率) で判定し、最初に当選した敵を返す。
+  // 誰も当選しなければ均等抽選でフォールバック（必ず1体は返す）。
+  function pickByRate(pool) {
+    // 並び順による偏りをなくすためシャッフルしてから順に判定
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    for (const e of shuffled) {
+      const rate = (typeof e.spawnRate === 'number') ? e.spawnRate : 1;
+      if (Math.random() < rate) return { ...e };
+    }
+    return pickRandom(pool);
+  }
+
   function buildWaves(avgLv) {
-    const minLv = Math.max(1, avgLv - 1);
-    const maxLv = avgLv + 2;
-    let pool = getEnemyByLevel(minLv, maxLv, true);
-    // マッチする敵がいない場合は全敵を候補にする
+    // 候補 = Lv10以下・ボス以外。各敵は spawnRate(一律30%) で出現抽選する。
+    let pool = ENEMY_DATA.filter(e => !e.isBoss && e.level <= 10);
+    // 該当がいない場合は全通常敵 → それも無ければ全敵をフォールバック候補に
     if (pool.length === 0) pool = ENEMY_DATA.filter(e => !e.isBoss);
     if (pool.length === 0) pool = [...ENEMY_DATA];
 
     const bossPool = getBossEnemies(avgLv);
 
     const waves = [
-      pickRandom(pool),  // Wave 1
-      pickRandom(pool),  // Wave 2
+      pickByRate(pool),  // Wave 1
+      pickByRate(pool),  // Wave 2
     ];
     // Wave 3: ボス20%確率 or 通常敵
     if (bossPool.length > 0 && Math.random() < 0.2) {
       waves.push(pickRandom(bossPool));
     } else {
-      waves.push(pickRandom(pool));
+      waves.push(pickByRate(pool));
     }
     return waves;
   }
