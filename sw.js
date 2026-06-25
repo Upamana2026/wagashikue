@@ -4,7 +4,7 @@
 // すべて相対パスで登録・キャッシュする。
 // ※ ファイルを更新したら CACHE のバージョン名（v1 → v2 ...）を上げる
 // ============================
-const CACHE = 'wagashikue-v9';
+const CACHE = 'wagashikue-v10';
 
 // 起動に必要な「アプリシェル」一式（相対パス）
 const APP_SHELL = [
@@ -19,7 +19,10 @@ const APP_SHELL = [
   './js/battle.js',
   './js/gacha.js',
   './js/encyclopedia.js',
+  './js/bgm.js',
   './js/app.js',
+  './Samurai_Strain.mp3',
+  './新年の風.mp3',
   './中アイコン.png',
   './icons/icon-192.png',
   './icons/icon-512.png',

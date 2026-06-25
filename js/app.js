@@ -24,6 +24,8 @@ const App = (() => {
   }
 
   function onEnterScreen(name) {
+    // 画面に応じたBGMへ切り替え（バトルのみ専用曲、他は共通曲）
+    BGM.playFor(name);
     switch (name) {
       case 'menu':
         updateMenuInfo();
