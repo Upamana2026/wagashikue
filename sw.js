@@ -4,7 +4,7 @@
 // すべて相対パスで登録・キャッシュする。
 // ※ ファイルを更新したら CACHE のバージョン名（v1 → v2 ...）を上げる
 // ============================
-const CACHE = 'wagashikue-v4';
+const CACHE = 'wagashikue-v5';
 
 // 起動に必要な「アプリシェル」一式（相対パス）
 const APP_SHELL = [

@@ -7,6 +7,22 @@
 // ※ level と exp はここで個別設定
 const ENEMY_DATA = [
   {
+    id: 'mitarashi-dango',
+    name: 'みたらし団子',
+    level: 2,   // ※フォルダ名にLv指定なし。最弱ステータス(攻5/HP15)に合わせ、HP≒Lv×10 の既存対応に倣い仮設定
+    attack: 5,
+    hp: 15,
+    exp: 15,
+    wrongBoost: 20,
+    isBoss: false,
+    images: {
+      normal: '敵キャラ/みたらし団子_5_15_15_20%/normal.png',
+      jump:   '敵キャラ/みたらし団子_5_15_15_20%/jump.png',
+      attack: '敵キャラ/みたらし団子_5_15_15_20%/attack.png',
+    },
+    description: '香ばしい醤油だれをまとったみたらし団子。\n素朴ながら、串でちくちく突いてくる。'
+  },
+  {
     id: 'ichigo-daifuku',
     name: '苺大福',
     level: 5,   // 出現範囲: 味方平均Lv±範囲に合わせて設定
