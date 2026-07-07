@@ -12,27 +12,86 @@ const Battle = (() => {
   let state = null;
 
   // ================================================
-  // 攻撃SE（効果音）
+  // 攻撃SE（効果音）— HTMLAudio + 事前解錠(unlock)方式
   // ・味方の攻撃時: CHIPTUNE発射.mp3
   // ・敵の攻撃時  : enemy_attack.mp3（元ファイル: RPGゲームの攻撃・打撃風SE.mp3）
-  // ・連続攻撃で音が重なっても鳴らせるよう、再生のたびに複製して再生する。
+  //
+  // ★方針:
+  //   味方SEはクリック直後なので元の new Audio+play で鳴っていたが、
+  //   敵SEは setInterval の自動攻撃（ユーザー操作の文脈外）から鳴るため
+  //   自動再生ポリシーでブロックされ無音だった。
+  //   ・Web Audio(fetch+decode)は file:// 配信や一部環境で fetch が通らず
+  //     両方無音になったので不採用。
+  //   → HTMLAudio のまま、最初のユーザー操作で各<audio>を「無音再生→停止」して
+  //     解錠しておき、以降はその要素を使い回して再生する。
+  //     解錠済み要素はタイマー由来でも再生できる。重ね再生用に各SEを複数持つ。
   // ・音量・ミュートは端末(OS/ブラウザ)設定に従う（volumeは触らない）。
   // ================================================
   const ALLY_SE_SRC  = './CHIPTUNE発射.mp3';
-  const ENEMY_SE_SRC = './enemy_attack.mp3';  // 旧: RPGゲームの攻撃・打撃風SE.mp3（中黒「・」がURL/正規化で不一致になり無音化したためASCII名へ）
-  const _allySeBase  = new Audio(ALLY_SE_SRC);
-  const _enemySeBase = new Audio(ENEMY_SE_SRC);
-  _allySeBase.preload  = 'auto';
-  _enemySeBase.preload = 'auto';
+  const ENEMY_SE_SRC = './enemy_attack.mp3';
 
-  function _playSE(base) {
-    try {
-      const se = base.cloneNode();
-      se.play().catch(() => {});  // 自動再生ブロック時は無視
-    } catch (_) { /* 再生失敗は無視 */ }
-  }
-  function playAllySE()  { _playSE(_allySeBase); }
-  function playEnemySE() { _playSE(_enemySeBase); }
+  const SE = (() => {
+    const POOL_SIZE = 3;  // 重ね再生用に各SEで保持する要素数
+
+    function makePool(src) {
+      const arr = [];
+      for (let i = 0; i < POOL_SIZE; i++) {
+        const a = new Audio(src);
+        a.preload = 'auto';
+        arr.push(a);
+      }
+      return { arr, idx: 0 };
+    }
+
+    const pools = {
+      [ALLY_SE_SRC]:  makePool(ALLY_SE_SRC),
+      [ENEMY_SE_SRC]: makePool(ENEMY_SE_SRC),
+    };
+
+    let unlocked = false;
+
+    // 最初のユーザー操作で全要素を解錠する。
+    // 無音(muted)で一瞬 play→pause することで、以降タイマーからでも鳴らせる状態にする。
+    function unlock() {
+      if (unlocked) return;
+      unlocked = true;
+      Object.keys(pools).forEach((src) => {
+        pools[src].arr.forEach((a) => {
+          a.muted = true;
+          const p = a.play();
+          const restore = () => { try { a.pause(); a.currentTime = 0; } catch (_) {} a.muted = false; };
+          if (p && typeof p.then === 'function') p.then(restore).catch(() => { a.muted = false; });
+          else restore();
+        });
+      });
+    }
+
+    function arm() {
+      const handler = () => {
+        unlock();
+        document.removeEventListener('pointerdown', handler);
+        document.removeEventListener('keydown', handler);
+      };
+      document.addEventListener('pointerdown', handler);
+      document.addEventListener('keydown', handler);
+    }
+    arm();
+
+    function play(src) {
+      const pool = pools[src];
+      if (!pool) return;
+      const a = pool.arr[pool.idx];
+      pool.idx = (pool.idx + 1) % pool.arr.length;
+      try { a.currentTime = 0; } catch (_) {}
+      const p = a.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});  // ブロック時は無視
+    }
+
+    return { play };
+  })();
+
+  function playAllySE()  { SE.play(ALLY_SE_SRC); }
+  function playEnemySE() { SE.play(ENEMY_SE_SRC); }
 
   function startBattle(subjectName) {
     const stock = Storage.getStock();

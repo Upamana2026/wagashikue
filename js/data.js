@@ -45,17 +45,17 @@ const ENEMY_DATA = [
   {
     id: 'mizu-yokan',
     name: '水ようかん',
-    level: 6,   // ※フォルダ名にLv指定がないため、ステータス(攻30/HP65)に合わせて仮設定
-    attack: 30,
-    hp: 65,
+    level: 6,   // ※フォルダ名にLv指定がないため、ステータス(攻15/HP30)に合わせて仮設定
+    attack: 15,
+    hp: 30,
     exp: 20,
     wrongBoost: 20,
     spawnRate: 0.30,
     isBoss: false,
     images: {
-      normal: '敵キャラ/水ようかん_30_65_20_20％/nomal.png',
-      jump:   '敵キャラ/水ようかん_30_65_20_20％/jump.png',
-      attack: '敵キャラ/水ようかん_30_65_20_20％/attack.png',
+      normal: '敵キャラ/水ようかん_15_30_20_20％/nomal.png',
+      jump:   '敵キャラ/水ようかん_15_30_20_20％/jump.png',
+      attack: '敵キャラ/水ようかん_15_30_20_20％/attack.png',
     },
     description: 'つるんと涼やかな水ようかん。\n見た目に反してしぶとく、なかなか崩れない。'
   }
