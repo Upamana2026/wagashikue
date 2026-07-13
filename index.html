@@ -156,6 +156,14 @@
       <p class="gacha-cost">1回 200角砂糖</p>
       <button class="btn-gacha" onclick="Gacha.roll()">ガチャを回す！</button>
       <div id="gacha-result" class="gacha-result hidden"></div>
+
+      <div class="gacha-stock-expand-box">
+        <p class="gacha-stock-count-text">
+          ストック: <strong id="gacha-stock-count">0</strong>/<strong id="gacha-stock-limit">2</strong>体
+        </p>
+        <button class="btn-stock-expand" onclick="Gacha.expandStock()">🍬 角砂糖500個でストックを1つ開放</button>
+      </div>
+
       <div class="gacha-rate-note">
         <h3>排出率一覧</h3>
         <div id="gacha-rate-list">

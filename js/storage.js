@@ -11,6 +11,7 @@ const Storage = (() => {
     ENC_ALLIES:  'wq_encAllies',
     ENC_ENEMIES: 'wq_encEnemies',
     INIT_GRANTED:'wq_initialGranted',
+    STOCK_EXPANSION: 'wq_stockExpansion',
   };
 
   function _get(key, def) {
@@ -55,10 +56,14 @@ const Storage = (() => {
   // ストック上限計算
   function getStockLimit() {
     const lv = getUserLevel();
-    if (lv < 10) return 2;
+    const base = lv < 10 ? 2 : Math.floor(lv / 10) + 2;
     // Lv10で3体、以降10レベルごとに+1（Lv10→3, Lv20→4, Lv30→5 ...）
-    return Math.floor(lv / 10) + 2;
+    return base + getStockExpansion();
   }
+
+  // 角砂糖で購入したストック拡張数（ガチャ画面から500角砂糖消費で+1）
+  function getStockExpansion()    { return _get(KEYS.STOCK_EXPANSION, 0); }
+  function addStockExpansion(n)   { _set(KEYS.STOCK_EXPANSION, getStockExpansion() + n); }
 
   // 次レベルまでの必要経験値
   function expToNextLevel(lv) { return lv * 102; }
@@ -139,7 +144,8 @@ const Storage = (() => {
     getStock, setStock,
     getQuizSets, setQuizSets,
     getEncAllies, getEncEnemies, addEncAlly, addEncEnemy,
-    getStockLimit, expToNextLevel, addExp, addSugar, useSugar,
+    getStockLimit, getStockExpansion, addStockExpansion,
+    expToNextLevel, addExp, addSugar, useSugar,
     initIfNew
   };
 })();

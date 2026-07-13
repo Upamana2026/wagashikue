@@ -3,6 +3,7 @@
 // ============================
 const Gacha = (() => {
   const COST = 200;
+  const STOCK_EXPAND_COST = 500;
 
   function roll() {
     const stock = Storage.getStock();
@@ -47,6 +48,32 @@ const Gacha = (() => {
     return ALLY_DATA[ALLY_DATA.length - 1];
   }
 
+  // ストック拡張: 角砂糖500個消費でストック上限を+1する（永続）
+  function expandStock() {
+    if (!Storage.useSugar(STOCK_EXPAND_COST)) {
+      showMessage(`角砂糖が足りません！\n必要: ${STOCK_EXPAND_COST}個 / 所持: ${Storage.getUserSugar()}個`, 'error');
+      return;
+    }
+
+    Storage.addStockExpansion(1);
+
+    document.getElementById('gacha-sugar').textContent = Storage.getUserSugar();
+    App.updateMenuSugar();
+    updateStockDisplay();
+    showMessage(`ノミモノたちのストックが1つ増えました！\n現在の上限: ${Storage.getStockLimit()}体`, 'info');
+  }
+
+  function showMessage(msg, type) {
+    const el = document.getElementById('gacha-result');
+    el.classList.remove('hidden');
+    el.innerHTML = `<div class="gacha-${type}">${msg}</div>`;
+  }
+
+  function updateStockDisplay() {
+    document.getElementById('gacha-stock-count').textContent = Storage.getStock().length;
+    document.getElementById('gacha-stock-limit').textContent = Storage.getStockLimit();
+  }
+
   function showResult(errorMsg, ally) {
     const el = document.getElementById('gacha-result');
     el.classList.remove('hidden');
@@ -76,7 +103,8 @@ const Gacha = (() => {
     document.getElementById('gacha-sugar').textContent = Storage.getUserSugar();
     document.getElementById('gacha-result').classList.add('hidden');
     document.getElementById('gacha-result').innerHTML = '';
+    updateStockDisplay();
   }
 
-  return { roll, renderGachaScreen };
+  return { roll, expandStock, renderGachaScreen };
 })();
