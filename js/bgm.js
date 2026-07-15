@@ -12,6 +12,7 @@ const BGM = (() => {
     battle: './Samurai_Strain.mp3',
   };
   const DEFAULT_TRACK = './新年の風.mp3';
+  const SUDDEN_DEATH_TRACK = './Kurba.mp3';
 
   const audio = new Audio();
   audio.loop = true;
@@ -21,8 +22,15 @@ const BGM = (() => {
 
   let currentSrc = null;   // 現在ロード中のトラック
   let armed = false;       // 自動再生ブロック時のユーザー操作待ち中か
+  let battleTrack = TRACKS.battle;  // バトル画面用トラック（サドンデス時は差し替える）
+
+  // Battle.startBattle から、バトル画面に入る直前に呼ぶ
+  function setSuddenDeath(isSuddenDeath) {
+    battleTrack = isSuddenDeath ? SUDDEN_DEATH_TRACK : TRACKS.battle;
+  }
 
   function resolveSrc(screen) {
+    if (screen === 'battle') return battleTrack;
     return TRACKS[screen] || DEFAULT_TRACK;
   }
 
@@ -61,5 +69,5 @@ const BGM = (() => {
     document.addEventListener('keydown', resume);
   }
 
-  return { playFor };
+  return { playFor, setSuddenDeath };
 })();

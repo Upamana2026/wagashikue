@@ -3,6 +3,23 @@
 // ============================
 const QuizManager = (() => {
 
+  // サドンデスモード ON/OFF（アプリ再読込で保持しない：画面上のトグルのみ）
+  let suddenDeathMode = false;
+
+  function isSuddenDeathMode() { return suddenDeathMode; }
+
+  function toggleSuddenDeath() {
+    suddenDeathMode = !suddenDeathMode;
+    renderSuddenDeathToggle();
+  }
+
+  function renderSuddenDeathToggle() {
+    const btn = document.getElementById('sudden-death-toggle');
+    if (!btn) return;
+    btn.textContent = suddenDeathMode ? '🔥 サドンデス ON' : 'サドンデス OFF';
+    btn.classList.toggle('active', suddenDeathMode);
+  }
+
   // ランダム選択肢を生成（同科目の正解から補完）
   function buildChoices(q, allQuestions) {
     const wrong = [...q.wrong].filter(w => w && w.trim() !== '');
@@ -219,6 +236,7 @@ const QuizManager = (() => {
   }
 
   function renderSubjectSelect() {
+    renderSuddenDeathToggle();
     const el = document.getElementById('subject-list');
     if (!el) return;
     const names = getSubjectNames();
@@ -232,7 +250,7 @@ const QuizManager = (() => {
     }).join('');
     const subjectList = names;
     el.querySelectorAll('[data-bidx]').forEach(btn => {
-      btn.addEventListener('click', () => Battle.startBattle(subjectList[parseInt(btn.dataset.bidx)]));
+      btn.addEventListener('click', () => Battle.startBattle(subjectList[parseInt(btn.dataset.bidx)], suddenDeathMode));
     });
   }
 
@@ -256,5 +274,6 @@ const QuizManager = (() => {
     addSubject, deleteSubject, deleteQuestion,
     importFile, viewSubject,
     renderSubjectSelect, initQuizManageScreen,
+    isSuddenDeathMode, toggleSuddenDeath,
   };
 })();

@@ -93,7 +93,7 @@ const Battle = (() => {
   function playAllySE()  { SE.play(ALLY_SE_SRC); }
   function playEnemySE() { SE.play(ENEMY_SE_SRC); }
 
-  function startBattle(subjectName) {
+  function startBattle(subjectName, suddenDeath = false) {
     const stock = Storage.getStock();
     if (stock.length === 0) {
       showPopup('味方キャラがいません！ガチャで仲間を増やしましょう！');
@@ -126,9 +126,10 @@ const Battle = (() => {
     );
 
     // Waveの敵を選定（通常モードのみ。テストモードでは未使用）
+    // 通常は3Wave、サドンデスモードは10Waveまで挑戦できる
     let waves = [];
     if (!TEST_RANDOM_SPAWN) {
-      waves = buildWaves(avgLevel);
+      waves = buildWaves(avgLevel, suddenDeath ? 10 : 3);
       if (waves.length === 0) {
         showPopup('出現できる敵がいません！');
         return;
@@ -140,6 +141,7 @@ const Battle = (() => {
 
     state = {
       subject: subjectName,
+      suddenDeath,
       alliesOnField,
       remainingStock,
       waves,
@@ -149,9 +151,15 @@ const Battle = (() => {
       answered: false,
       expGained: 0,
       sugarGained: 0,
+      leveledTotal: 0,
       spawnCount: 0,
       spawnTimerId: null,
     };
+
+    // サドンデスモードはバトルBGMを専用曲(Kurba.mp3)に差し替える
+    if (typeof BGM !== 'undefined' && BGM.setSuddenDeath) {
+      try { BGM.setSuddenDeath(suddenDeath); } catch (e) { console.warn('BGM切替エラー:', e); }
+    }
 
     App.goTo('battle');
     renderBattleScreen();
@@ -217,7 +225,8 @@ const Battle = (() => {
     return pickRandom(pool);
   }
 
-  function buildWaves(avgLv) {
+  // waveCount: 通常モード=3、サドンデスモード=10
+  function buildWaves(avgLv, waveCount) {
     // 候補 = Lv10以下・ボス以外。各敵は spawnRate(一律30%) で出現抽選する。
     let pool = ENEMY_DATA.filter(e => !e.isBoss && e.level <= 10);
     // 該当がいない場合は全通常敵 → それも無ければ全敵をフォールバック候補に
@@ -226,11 +235,11 @@ const Battle = (() => {
 
     const bossPool = getBossEnemies(avgLv);
 
-    const waves = [
-      pickByRate(pool),  // Wave 1
-      pickByRate(pool),  // Wave 2
-    ];
-    // Wave 3: ボス20%確率 or 通常敵
+    const waves = [];
+    for (let i = 0; i < waveCount - 1; i++) {
+      waves.push(pickByRate(pool));
+    }
+    // 最終Wave: ボス20%確率 or 通常敵
     if (bossPool.length > 0 && Math.random() < 0.2) {
       waves.push(pickRandom(bossPool));
     } else {
@@ -482,11 +491,26 @@ const Battle = (() => {
     if (cb) setTimeout(cb, 400);
   }
 
+  // サドンデスモードの1体撃破あたりの角砂糖報酬（敵の経験値に応じて変動）
+  function sugarForEnemy(enemy) {
+    const base = Math.max(enemy.exp, 5);
+    return 3 + Math.floor(Math.random() * base);
+  }
+
   function enemyDefeated() {
     stopEnemyAttackLoop();
     const enemy = state.currentEnemy;
     state.expGained += enemy.exp;
     Storage.addEncEnemy(enemy.id);
+
+    // サドンデスモードは倒した敵の分だけ即座に経験値・角砂糖を確定させる
+    // （敗北しても、それまでに倒した分の報酬は失われない）
+    if (state.suddenDeath) {
+      const sugar = sugarForEnemy(enemy);
+      state.sugarGained += sugar;
+      Storage.addSugar(sugar);
+      state.leveledTotal += Storage.addExp(enemy.exp);
+    }
 
     // テストモード: 勝利判定せず撃破演出のみ。次の敵は5秒タイマーが連れてくる
     if (TEST_RANDOM_SPAWN) {
@@ -510,15 +534,24 @@ const Battle = (() => {
   function battleVictory() {
     stopEnemyAttackLoop();
     if (state && state.spawnTimerId) { clearInterval(state.spawnTimerId); state.spawnTimerId = null; }
-    const sugar = 5 + Math.floor(Math.random() * 96); // 5〜100
-    state.sugarGained = sugar;
-    Storage.addSugar(sugar);
-    const leveled = Storage.addExp(state.expGained);
 
-    document.getElementById('battle-result-title').textContent = '⭐ 勝利！';
+    // サドンデスモードは撃破のたびに報酬を確定済み。通常モードはここで一括付与。
+    let leveled;
+    if (state.suddenDeath) {
+      leveled = state.leveledTotal;
+    } else {
+      const sugar = 5 + Math.floor(Math.random() * 96); // 5〜100
+      state.sugarGained = sugar;
+      Storage.addSugar(sugar);
+      leveled = Storage.addExp(state.expGained);
+    }
+
+    document.getElementById('battle-result-title').textContent =
+      state.suddenDeath ? '🔥 サドンデス 完全制覇！' : '⭐ 勝利！';
     document.getElementById('battle-result-msg').innerHTML = `
+      ${state.suddenDeath ? `<p>Wave ${state.waves.length} まで勝ち抜いた！</p>` : ''}
       <p>経験値 +${state.expGained}</p>
-      <p>🍬 角砂糖 +${sugar}</p>
+      <p>🍬 角砂糖 +${state.sugarGained}</p>
       ${leveled > 0 ? `<p class="levelup-msg">🎉 Lv UP！ → Lv.${Storage.getUserLevel()}</p>` : ''}
     `;
     showOverlay();
@@ -528,10 +561,20 @@ const Battle = (() => {
     stopEnemyAttackLoop();
     if (state && state.spawnTimerId) { clearInterval(state.spawnTimerId); state.spawnTimerId = null; }
     document.getElementById('battle-result-title').textContent = '💧 敗北...';
-    document.getElementById('battle-result-msg').innerHTML = `
-      <p>戦えるキャラがいなくなってしまった...</p>
-      <p>ガチャで仲間を増やそう！</p>
-    `;
+
+    // サドンデスモードは敗北しても、それまでに倒した敵の分の報酬は確定済みで残る
+    if (state.suddenDeath) {
+      document.getElementById('battle-result-msg').innerHTML = `
+        <p>Wave ${state.currentWave + 1} で戦えるキャラがいなくなってしまった...</p>
+        <p>経験値 +${state.expGained}</p>
+        <p>🍬 角砂糖 +${state.sugarGained}</p>
+      `;
+    } else {
+      document.getElementById('battle-result-msg').innerHTML = `
+        <p>戦えるキャラがいなくなってしまった...</p>
+        <p>ガチャで仲間を増やそう！</p>
+      `;
+    }
     showOverlay();
   }
 
@@ -656,7 +699,8 @@ const Battle = (() => {
       el.textContent = `テストモード｜出現数 ${state.spawnCount}`;
       return;
     }
-    el.textContent = `Wave ${state.currentWave + 1} / ${state.waves.length}`;
+    const prefix = state.suddenDeath ? '🔥 ' : '';
+    el.textContent = `${prefix}Wave ${state.currentWave + 1} / ${state.waves.length}`;
   }
 
   function renderEnemyArea() {

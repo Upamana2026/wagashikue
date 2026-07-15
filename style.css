@@ -164,6 +164,18 @@ html, body {
 
 .hint-text { text-align: center; color: #AAA; font-size: 0.8rem; padding: 8px 16px; }
 
+.btn-sudden-death {
+  border: none; border-radius: 20px; padding: 6px 12px;
+  font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  background: rgba(255,255,255,0.25); color: var(--white);
+  white-space: nowrap; transition: background .15s, color .15s;
+}
+.btn-sudden-death:hover { background: rgba(255,255,255,0.4); }
+.btn-sudden-death.active {
+  background: linear-gradient(135deg, #FF6B6B, #FF3B3B);
+  color: var(--white);
+}
+
 /* ============================
    バトル画面
    ============================ */
